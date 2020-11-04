@@ -9,4 +9,4 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions-rs/audit-check@v1
         with:
-          token: 6e42ea15adb1140ef852699c18e8db35cbbacc71
+          token: ${{ secrets.GITHUB_TOKEN }}
