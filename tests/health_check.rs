@@ -1,9 +1,9 @@
-use sqlx::{PgPool, PgConnection, Connection};
+use sqlx::Executor;
+use sqlx::{Connection, PgConnection, PgPool};
 use std::net::TcpListener;
+use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
 use zero2prod::startup::run;
-use uuid::Uuid;
-use sqlx::Executor;
 
 pub struct TestApp {
     pub address: String,
@@ -19,7 +19,7 @@ async fn spawn_app() -> TestApp {
     configuration.database.database_name = Uuid::new_v4().to_string();
     let connection_pool = configure_database(&configuration.database).await;
 
-    let server =run(listener, connection_pool.clone()).expect("Failed to bind address");
+    let server = run(listener, connection_pool.clone()).expect("Failed to bind address");
 
     // Launch the server as a background task
     // tokio::spawn returns a handle to the spawned future,
@@ -28,25 +28,30 @@ async fn spawn_app() -> TestApp {
 
     TestApp {
         address,
-        db_pool: connection_pool
+        db_pool: connection_pool,
     }
 }
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // Create database
     let mut connection = PgConnection::connect(&config.connection_string_without_db())
-        .await.expect("Failed to connect to Postgres.");
-    connection.execute(&*format!(r#"CREATE DATABASE "{}"; "#, config.database_name))
-        .await.expect("Failed to create database.");
+        .await
+        .expect("Failed to connect to Postgres.");
+    connection
+        .execute(&*format!(r#"CREATE DATABASE "{}"; "#, config.database_name))
+        .await
+        .expect("Failed to create database.");
 
     // Migrate database
     let connection_pool = PgPool::connect(&config.connection_string())
-        .await.expect("Failed to connect to Postgres.");
-    sqlx::migrate!("./migrations").run(&connection_pool)
-        .await.expect("Failed to migrate the database.");
+        .await
+        .expect("Failed to connect to Postgres.");
+    sqlx::migrate!("./migrations")
+        .run(&connection_pool)
+        .await
+        .expect("Failed to migrate the database.");
 
     connection_pool
-
 }
 
 // `actix_rt::test` is the testing equivalent of `actix_web:main`.
