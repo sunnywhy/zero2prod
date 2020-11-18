@@ -22,8 +22,7 @@ name = "app"
 actix-rt = "1.1.1"
 actix-web = "3.2.0"
 serde = { version = "1.0.117", features = ["derive"] }
-sqlx = { version = "0.4.1", features = [ "macros", "postgres", "uuid", "chrono", "migrate", "runtime-tokio-native-tls"] }
-sqlx-rt = { version = "0.2.0", features = [ "runtime-tokio-native-tls" ] }
+sqlx = { version = "0.4.1", features = [ "macros", "postgres", "uuid", "chrono", "migrate", "runtime-tokio-rustls"] }
 config = "0.10.1"
 uuid = { version = "0.8.1", features = ["v4"] }
 chrono = "0.4.19"
