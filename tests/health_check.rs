@@ -1,6 +1,7 @@
 use sqlx::Executor;
 use sqlx::{Connection, PgConnection, PgPool};
 use std::net::TcpListener;
+use tokio::runtime::Runtime;
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
 use zero2prod::startup::run;
@@ -19,12 +20,10 @@ async fn spawn_app() -> TestApp {
     configuration.database.database_name = Uuid::new_v4().to_string();
     let connection_pool = configure_database(&configuration.database).await;
 
-    let server = run(listener, connection_pool.clone()).expect("Failed to bind address");
-
-    // Launch the server as a background task
-    // tokio::spawn returns a handle to the spawned future,
-    // but we have no use for it, hence the non-binding let
-    let _ = tokio::spawn(server);
+    let rt = Runtime::new().unwrap();
+    rt.block_on(async {
+        run(listener, connection_pool.clone()).expect("Failed to bind address");
+    });
 
     TestApp {
         address,
